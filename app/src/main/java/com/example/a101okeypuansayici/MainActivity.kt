@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
 @Serializable
 object PuanHesaplamaEkrani
 
-data class Tas(var renk: String, var sayi: Int)
+data class Tas(var renk: String, var sayi: Int, var resim: Int)
 
 data class Isteka(var eldekiTaslar: MutableList<Tas>, var puan: Int)
 
@@ -93,8 +93,8 @@ fun NavYoneticisi() {
         composable<PuanHesaplamaEkrani> {
             val context = LocalContext.current
             var ciftMiGidiyor by remember { mutableStateOf(false) }
-            var okey by remember { mutableStateOf(Tas("", -1)) }
-            var sahteOkey by remember { mutableStateOf(Tas(okey.renk, (okey.sayi + 1))) }
+            var okey by remember { mutableStateOf(Tas("", -1, R.drawable.sahteokey)) }
+            val sahteOkey by remember { mutableStateOf(Tas(okey.renk, (okey.sayi + 1), R.drawable.sahteokey)) }
             var okeySec by remember { mutableStateOf(false) }
             var okeyiGoster by remember { mutableStateOf(false) }
             var isteka by remember { mutableStateOf(Isteka(eldekiTaslar = mutableStateListOf(), 0)) }
@@ -106,46 +106,11 @@ fun NavYoneticisi() {
                     .verticalScroll(rememberScrollState())
                     .background(brush = Brush.verticalGradient(listOf(Color.DarkGray, Color.LightGray)))
             ) {
-                //Okeyin gösterileceği kutu
-                Box(contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(14.dp, 14.dp, 14.dp, 0.dp)
-                        .width(52.dp)
-                        .height(if (okey.sayi != -1) 80.dp else 0.dp)
-                        .background(
-                            shape = RoundedCornerShape(10.dp),
-                            color = Color(252, 244, 198))
-                        .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
-                )
-                {
-                    Text(
-                        style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 4f)),
-                        color = if (okey.renk == "Kırmızı") Color(158, 21, 31)
-                        else if (okey.renk == "Sarı") Color(252, 158, 60)
-                        else if (okey.renk == "Siyah") Color.Black
-                        else Color(0, 91, 170),
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 12.dp),
-                        text = okey.sayi.toString()
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 12.dp)
-                            .border(
-                                4.dp,
-                                if (okey.renk == "Kırmızı") Color(158, 21, 31)
-                                else if (okey.renk == "Sarı") Color(252, 158, 60)
-                                else if (okey.renk == "Siyah") Color.Black
-                                else Color(0, 91, 170), shape = CircleShape
-                            )
-                            .align(Alignment.BottomCenter)
-                            .size(18.dp),
-                    ) {}
+                //Okeyin gösterileceği kutu oluşturuluyor
+                Box(modifier = Modifier.padding(start = 16.dp)) {
+                    TasGorunumuOlustur(okey, modifier = Modifier.clickable {})
                 }
+
                 //Okey seçme tuşu
                 Button(
                     modifier = Modifier
@@ -182,66 +147,22 @@ fun NavYoneticisi() {
                                 .horizontalScroll(rememberScrollState())
                             ) {
                                 for (tasNumarasi in 1..13) {
-                                    var renk=if (renkler == 1) "Kırmızı"
+                                    val renk = if (renkler == 1) "Kırmızı"
                                     else if (renkler == 2) "Sarı"
                                     else if (renkler == 3) "Siyah"
                                     else "Mavi"
-                                    var olusanTas by remember{ mutableStateOf(Tas(renk,tasNumarasi))}
-                                    Box(contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .testTag(
-                                                tag = if (renkler == 1) "Kırmızı"
-                                                else if (renkler == 2) "Sarı"
-                                                else if (renkler == 3) "Siyah"
-                                                else "Mavi"
-                                            )
-                                            .padding(end = 8.dp)
-                                            .width(52.dp)
-                                            .height(80.dp)
-                                            .background(shape = RoundedCornerShape(10.dp),
-                                                color = Color(252, 244, 198)
-                                            )
-                                            .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
-                                            .clickable {
-                                                if (isteka.eldekiTaslar.size < 5) {
-                                                    isteka.eldekiTaslar.add(olusanTas)
-                                                    Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.size.toString() + ". taş seçildi")
-                                                    Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().sayi.toString())
-                                                    Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().renk)
-                                                    Log.println(Log.INFO, "ismet", "--------------------------------")
-                                                } else {
-                                                    Log.println(Log.INFO, "ismet", "İSTEKA DOLDU")
-                                                }
-                                            }
-                                    ) {
-
-                                        Text(
-                                            text = tasNumarasi.toString(),
-                                            style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 4f)),
-                                            color = if (renkler == 1) Color(158, 21, 31)
-                                            else if (renkler == 2) Color(252, 158, 60)
-                                            else if (renkler == 3) Color.Black
-                                            else Color(0, 91, 170),
-                                            fontSize = 28.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier
-                                                .align(Alignment.TopCenter)
-                                                .padding(top = 12.dp))
-
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(bottom = 12.dp)
-                                                .border(
-                                                    4.dp,
-                                                    if (renkler == 1) Color(158, 21, 31)
-                                                    else if (renkler == 2) Color(252, 158, 60)
-                                                    else if (renkler == 3) Color.Black
-                                                    else Color(0, 91, 170), shape = CircleShape
-                                                )
-                                                .align(Alignment.BottomCenter)
-                                                .size(18.dp),
-                                        ) {}
-                                    }
+                                    val olusanTas by remember { mutableStateOf(Tas(renk, tasNumarasi, 0)) }
+                                    TasGorunumuOlustur(olusanTas, modifier = Modifier.clickable {
+                                        if (isteka.eldekiTaslar.size < 22) {
+                                            isteka.eldekiTaslar.add(olusanTas)
+                                            Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.size.toString() + ". taş seçildi")
+                                            Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().sayi.toString())
+                                            Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().renk)
+                                            Log.println(Log.INFO, "ismet", "--------------------------------")
+                                        } else {
+                                            Log.println(Log.INFO, "ismet", "İSTEKA DOLDU")
+                                        }
+                                    })
                                 }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
@@ -252,21 +173,15 @@ fun NavYoneticisi() {
                         .padding(16.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .testTag("Çakma")
-                                .width(52.dp)
-                                .height(80.dp)
-                                .background(shape = RoundedCornerShape(10.dp),
-                                    color = Color(252, 244, 198)
-                                )
-                                .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
-                                .clickable { Toast.makeText(context, sahteOkey.renk + sahteOkey.sayi, Toast.LENGTH_SHORT).show() }
-                        ) {
+                        TasGorunumuOlustur(Tas(okey.renk, okey.sayi, R.drawable.sahteokey), modifier = Modifier.clickable {
+                            if (okey.sayi != -1) {
+                                isteka.eldekiTaslar.add(Tas(okey.renk, okey.sayi, R.drawable.sahteokey))
+                            } else {
+                                Toast.makeText(context, "Okey seçilmedi", Toast.LENGTH_LONG).show()
+                            }
 
-                            Image(painter = painterResource(id = R.drawable.sahteokey),
-                                contentDescription = "sahte okey", modifier = Modifier.size(30.dp))
-                        }
+                        })
+
                         Spacer(modifier = Modifier.height(25.dp))
                         Switch(checked = ciftMiGidiyor,
                             onCheckedChange = { ciftMiGidiyor = it },
@@ -308,11 +223,54 @@ fun NavYoneticisi() {
                         Text(text = "Geri al", color = Color.White, fontSize = 18.sp)
                     }
                 }
-            }
-            Box {//Seçili taşlar kalan puan yanda gösterilebilir
-                LazyColumn {
-                    items(isteka.eldekiTaslar){ tas->
+                //Seçili taşlar kalan puan yanda gösterilebilir
+                Box(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                    LazyRow {
+                        items(isteka.eldekiTaslar) { tas ->
+                            TasGorunumuOlustur(tas, modifier = Modifier)
+                            //puan hesaplama algoritması başlıyor yippie
+                            var per = remember { mutableStateListOf<Tas>() }
+                            var eklemeIzni by remember { mutableStateOf(false) }
+                            if (isteka.eldekiTaslar.size == 22) {
+                                isteka.eldekiTaslar.sortBy { it.sayi }
+                                for ((indis, tas) in isteka.eldekiTaslar.withIndex()) {
+                                    if (indis+1==isteka.eldekiTaslar.size){break}
+                                    else{
+                                        if (tas.sayi == isteka.eldekiTaslar.get(indis + 1).sayi && tas.renk != isteka.eldekiTaslar.get(indis + 1).renk) {
+                                            if (per.size < 1) {
+                                                per.add(tas)
+                                                per.add(isteka.eldekiTaslar.get(indis + 1))
+                                            } else {
+                                                for ((i, renkAriyorum) in per.withIndex()) {
+                                                    if (i+1==per.size){break}
+                                                    else{
+                                                        if (renkAriyorum.renk == per.get(i + 1).renk) {
+                                                            eklemeIzni=false
+                                                            break
+                                                        } else {
+                                                            eklemeIzni=true
+                                                            continue
+                                                        }
+                                                    }
+                                                }
+                                                if(eklemeIzni){
+                                                    per.add(isteka.eldekiTaslar.get(indis + 1))
+                                                }
+                                                else{
+                                                    if (per.size<3){}
+                                                    else{
+                                                        Log.println(Log.INFO,"bune",per.size.toString())
+                                                    }
+                                                }
 
+                                            }
+                                        } else if (tas.sayi == 1) {
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -325,7 +283,7 @@ fun OkeyDiyalogSayi(onDismiss: () -> Unit): Pair<Boolean, Tas> {
     var okeySayisiSecildiMi by remember { mutableStateOf(false) }
     var gonderilmeyeHazir by remember { mutableStateOf(false) }
     var seciliSayi by remember { mutableStateOf(-1) }
-    var hazirTas by remember { mutableStateOf(Tas("", -1)) }
+    var hazirTas by remember { mutableStateOf(Tas("", -1, 0)) }
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(dismissOnClickOutside = true)
@@ -362,7 +320,7 @@ fun OkeyDiyalogSayi(onDismiss: () -> Unit): Pair<Boolean, Tas> {
                                 }
                         ) {
                             Text(text = (index + 1).toString(),
-                                color=Color.Gray,
+                                color = Color.Gray,
                                 style = TextStyle(shadow = Shadow(Color.DarkGray, blurRadius = 4f)),
                                 fontSize = 25.sp,
                                 fontWeight = FontWeight.Bold)
@@ -390,7 +348,7 @@ fun OkeyDiyalogSayi(onDismiss: () -> Unit): Pair<Boolean, Tas> {
 
 @Composable
 fun OkeyDiyalogRenk(onDismiss: () -> Unit, seciliSayi: Int): Pair<Boolean, Tas> {
-    var secilenOkey by remember { mutableStateOf(Tas("", -1)) }
+    var secilenOkey by remember { mutableStateOf(Tas("", -1, 0)) }
     var renkSecmedim by remember { mutableStateOf(true) }
     Dialog(
         onDismissRequest = onDismiss,
@@ -436,4 +394,70 @@ fun OkeyDiyalogRenk(onDismiss: () -> Unit, seciliSayi: Int): Pair<Boolean, Tas> 
         }
     }
     return Pair(renkSecmedim, secilenOkey)
+}
+
+@Composable
+fun TasGorunumuOlustur(uretilecekTas: Tas, modifier: Modifier) {
+    Box(contentAlignment = Alignment.Center,
+        modifier = modifier
+            .padding(3.dp, 0.dp, 3.dp, 0.dp)
+            .width(52.dp)
+            .height(if (uretilecekTas.sayi != -1) 80.dp else 0.dp)
+            .background(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(252, 244, 198))
+            .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
+    )
+    {
+        //Normal taş üretimi sahte okey else içinde üretiliyor
+        if (uretilecekTas.resim == 0) {
+            Text(
+                style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 4f)),
+                color = if (uretilecekTas.renk == "Kırmızı") Color(158, 21, 31)
+                else if (uretilecekTas.renk == "Sarı") Color(252, 158, 60)
+                else if (uretilecekTas.renk == "Siyah") Color.Black
+                else Color(0, 91, 170),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 12.dp),
+                text = uretilecekTas.sayi.toString()
+            )
+
+            Box(
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .border(
+                        4.dp,
+                        if (uretilecekTas.renk == "Kırmızı") Color(158, 21, 31)
+                        else if (uretilecekTas.renk == "Sarı") Color(252, 158, 60)
+                        else if (uretilecekTas.renk == "Siyah") Color.Black
+                        else if (uretilecekTas.renk == "Mavi") Color(0, 91, 170)
+                        else {
+                            Color(0, 0, 0)
+                        }, shape = CircleShape
+                    )
+                    .align(Alignment.BottomCenter)
+                    .size(18.dp),
+            ) {}
+        }
+        //Sahte okey üretiliyor
+        else {
+            Box(contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .testTag("Çakma")
+                    .width(52.dp)
+                    .height(80.dp)
+                    .background(shape = RoundedCornerShape(10.dp),
+                        color = Color(252, 244, 198)
+                    )
+                    .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
+            ) {
+                Image(painter = painterResource(id = R.drawable.sahteokey),
+                    contentDescription = "sahte okey", modifier = Modifier.size(30.dp))
+            }
+        }
+
+    }
 }
