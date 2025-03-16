@@ -173,6 +173,7 @@ fun NavYoneticisi() {
                         .padding(16.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
+                        //buraya müdahale edilecek outofbounds vermesin
                         TasGorunumuOlustur(Tas(okey.renk, okey.sayi, R.drawable.sahteokey), modifier = Modifier.clickable {
                             if (okey.sayi != -1) {
                                 isteka.eldekiTaslar.add(Tas(okey.renk, okey.sayi, R.drawable.sahteokey))
@@ -199,7 +200,7 @@ fun NavYoneticisi() {
                 //tuşlar geri al sıfırla
                 Row {
                     Button(
-                        onClick = {},
+                        onClick = { isteka.eldekiTaslar.clear() },
                         modifier = Modifier
                             .padding(horizontal = 14.dp)
                             .height(48.dp),
@@ -224,54 +225,66 @@ fun NavYoneticisi() {
                     }
                 }
                 //Seçili taşlar kalan puan yanda gösterilebilir
-                Box(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                    var diziliIsteka = remember { mutableStateListOf<Tas>() }
                     LazyRow {
                         items(isteka.eldekiTaslar) { tas ->
-                            TasGorunumuOlustur(tas, modifier = Modifier)
                             //puan hesaplama algoritması başlıyor yippie
+                            TasGorunumuOlustur(tas, modifier = Modifier)
                             var per = remember { mutableStateListOf<Tas>() }
                             var eklemeIzni by remember { mutableStateOf(false) }
                             if (isteka.eldekiTaslar.size == 22) {
                                 isteka.eldekiTaslar.sortBy { it.sayi }
-                                for ((indis, tas) in isteka.eldekiTaslar.withIndex()) {
-                                    if (indis+1==isteka.eldekiTaslar.size){break}
-                                    else{
-                                        if (tas.sayi == isteka.eldekiTaslar.get(indis + 1).sayi && tas.renk != isteka.eldekiTaslar.get(indis + 1).renk) {
-                                            if (per.size < 1) {
-                                                per.add(tas)
-                                                per.add(isteka.eldekiTaslar.get(indis + 1))
-                                            } else {
-                                                for ((i, renkAriyorum) in per.withIndex()) {
-                                                    if (i+1==per.size){break}
-                                                    else{
-                                                        if (renkAriyorum.renk == per.get(i + 1).renk) {
-                                                            eklemeIzni=false
-                                                            break
+                                for ((indis, soldakiTas) in isteka.eldekiTaslar.withIndex()) {
+                                    if (indis+1<22) {
+                                        val sagdakiTas=isteka.eldekiTaslar.get(indis+1)
+                                        if (soldakiTas.sayi == sagdakiTas.sayi) {
+                                            if(soldakiTas.renk != sagdakiTas.renk){
+                                                if (per.size < 1) {
+                                                    per.add(soldakiTas)
+                                                    per.add(sagdakiTas)
+                                                    continue
+                                                } else {
+                                                    for ((i, renkAriyorum) in per.withIndex()) {
+                                                        if (i + 1 == per.size) {
+                                                            if(renkAriyorum.renk!=sagdakiTas.renk){eklemeIzni=true}
+                                                            else{break}
                                                         } else {
-                                                            eklemeIzni=true
-                                                            continue
+                                                            if (renkAriyorum.renk ==sagdakiTas.renk) {
+                                                                eklemeIzni = false
+                                                                break
+                                                            } else {
+                                                                eklemeIzni = true
+                                                                continue
+                                                            }
                                                         }
                                                     }
+                                                    if (eklemeIzni) {
+                                                        per.add(sagdakiTas)
+                                                        continue
+                                                    } else continue
                                                 }
-                                                if(eklemeIzni){
-                                                    per.add(isteka.eldekiTaslar.get(indis + 1))
-                                                }
-                                                else{
-                                                    if (per.size<3){}
-                                                    else{
-                                                        Log.println(Log.INFO,"bune",per.size.toString())
-                                                    }
-                                                }
-
+                                            } else continue
+                                        }else if(per.size>2){
+                                            if(diziliIsteka.size<20){
+                                                diziliIsteka.addAll(per)
+                                                per.clear()
                                             }
-                                        } else if (tas.sayi == 1) {
-                                        }
-                                    }
 
+                                        }
+
+                                    } else break
                                 }
                             }
                         }
                     }
+                    Text(text = isteka.eldekiTaslar.size.toString())
+                    LazyRow {
+                        items(diziliIsteka){item ->
+                            TasGorunumuOlustur(item, modifier = Modifier)
+                        }
+                    }
+                    Text(text = diziliIsteka.size.toString())
                 }
             }
         }
