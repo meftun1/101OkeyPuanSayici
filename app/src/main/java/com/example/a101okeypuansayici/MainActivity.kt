@@ -97,7 +97,8 @@ fun NavYoneticisi() {
             val sahteOkey by remember { mutableStateOf(Tas(okey.renk, (okey.sayi + 1), R.drawable.sahteokey)) }
             var okeySec by remember { mutableStateOf(false) }
             var okeyiGoster by remember { mutableStateOf(false) }
-            var isteka by remember { mutableStateOf(Isteka(eldekiTaslar = mutableStateListOf(), 0)) }
+            val isteka by remember { mutableStateOf(Isteka(eldekiTaslar = mutableStateListOf(), 0)) }
+            //val diziliIsteka = remember { mutableStateListOf<Tas>() }
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center,
@@ -182,7 +183,6 @@ fun NavYoneticisi() {
                             }
 
                         })
-
                         Spacer(modifier = Modifier.height(25.dp))
                         Switch(checked = ciftMiGidiyor,
                             onCheckedChange = { ciftMiGidiyor = it },
@@ -200,7 +200,9 @@ fun NavYoneticisi() {
                 //tuşlar geri al sıfırla
                 Row {
                     Button(
-                        onClick = { isteka.eldekiTaslar.clear() },
+                        onClick = { isteka.eldekiTaslar.clear()
+                                  //diziliIsteka.clear()
+                                  },
                         modifier = Modifier
                             .padding(horizontal = 14.dp)
                             .height(48.dp),
@@ -226,16 +228,16 @@ fun NavYoneticisi() {
                 }
                 //Seçili taşlar kalan puan yanda gösterilebilir
                 Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
-                    var diziliIsteka = remember { mutableStateListOf<Tas>() }
+
                     LazyRow {
                         items(isteka.eldekiTaslar) { tas ->
-                            //puan hesaplama algoritması başlıyor yippie
                             TasGorunumuOlustur(tas, modifier = Modifier)
-                            var per = remember { mutableStateListOf<Tas>() }
+                           /* var per = remember { mutableStateListOf<Tas>() }
                             var eklemeIzni by remember { mutableStateOf(false) }
                             if (isteka.eldekiTaslar.size == 22) {
                                 isteka.eldekiTaslar.sortBy { it.sayi }
                                 for ((indis, soldakiTas) in isteka.eldekiTaslar.withIndex()) {
+                                    eklemeIzni=false
                                     if (indis+1<22) {
                                         val sagdakiTas=isteka.eldekiTaslar.get(indis+1)
                                         if (soldakiTas.sayi == sagdakiTas.sayi) {
@@ -247,8 +249,11 @@ fun NavYoneticisi() {
                                                 } else {
                                                     for ((i, renkAriyorum) in per.withIndex()) {
                                                         if (i + 1 == per.size) {
-                                                            if(renkAriyorum.renk!=sagdakiTas.renk){eklemeIzni=true}
-                                                            else{break}
+                                                            if(renkAriyorum.renk!=sagdakiTas.renk){eklemeIzni=true
+                                                            }else{
+                                                                eklemeIzni=false
+                                                                break
+                                                            }
                                                         } else {
                                                             if (renkAriyorum.renk ==sagdakiTas.renk) {
                                                                 eklemeIzni = false
@@ -265,26 +270,26 @@ fun NavYoneticisi() {
                                                     } else continue
                                                 }
                                             } else continue
-                                        }else if(per.size>2){
-                                            if(diziliIsteka.size<20){
-                                                diziliIsteka.addAll(per)
-                                                per.clear()
-                                            }
-
                                         }
+                                    }
+                                    if(per.size>2){
+                                        if(diziliIsteka.size<100){
+                                            diziliIsteka.addAll(per)
+                                            per.clear()
+                                        }
+                                    }else per.clear()
 
-                                    } else break
                                 }
-                            }
+                            }*/
                         }
                     }
                     Text(text = isteka.eldekiTaslar.size.toString())
                     LazyRow {
-                        items(diziliIsteka){item ->
+                        items(EliDiz(isteka)){item ->
                             TasGorunumuOlustur(item, modifier = Modifier)
                         }
                     }
-                    Text(text = diziliIsteka.size.toString())
+                    Text(text = "diziliIsteka.size.toString()")
                 }
             }
         }
@@ -422,7 +427,7 @@ fun TasGorunumuOlustur(uretilecekTas: Tas, modifier: Modifier) {
             .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
     )
     {
-        //Normal taş üretimi sahte okey else içinde üretiliyor
+        //Normal taş üretimi, sahte okey else içinde üretiliyor
         if (uretilecekTas.resim == 0) {
             Text(
                 style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 4f)),
@@ -467,10 +472,64 @@ fun TasGorunumuOlustur(uretilecekTas: Tas, modifier: Modifier) {
                     )
                     .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
             ) {
-                Image(painter = painterResource(id = R.drawable.sahteokey),
+                Image(painter = painterResource(id = uretilecekTas.resim),
                     contentDescription = "sahte okey", modifier = Modifier.size(30.dp))
             }
         }
 
     }
+}
+
+//puan hesaplama algoritması başlıyor yippie
+fun EliDiz(alinanIsteka:Isteka):List<Tas>{
+    var per =  mutableStateListOf<Tas>()
+    var dizilecekIsteka =  mutableStateListOf<Tas>()
+    var eklemeIzni =  false
+    if (alinanIsteka.eldekiTaslar.size == 22) {
+        alinanIsteka.eldekiTaslar.sortBy { it.sayi }
+        for ((indis, soldakiTas) in alinanIsteka.eldekiTaslar.withIndex()) {
+            eklemeIzni=false
+            if (indis+1<22) {
+                val sagdakiTas=alinanIsteka.eldekiTaslar.get(indis+1)
+                if (soldakiTas.sayi == sagdakiTas.sayi) {
+                    if(soldakiTas.renk != sagdakiTas.renk){
+                        if (per.size < 1) {
+                            per.add(soldakiTas)
+                            per.add(sagdakiTas)
+                            continue
+                        } else {
+                            for ((i, renkAriyorum) in per.withIndex()) {
+                                if (i + 1 == per.size) {
+                                    if(renkAriyorum.renk!=sagdakiTas.renk){eklemeIzni=true
+                                    }else{
+                                        eklemeIzni=false
+                                        break
+                                    }
+                                } else {
+                                    if (renkAriyorum.renk ==sagdakiTas.renk) {
+                                        eklemeIzni = false
+                                        break
+                                    } else {
+                                        eklemeIzni = true
+                                        continue
+                                    }
+                                }
+                            }
+                            if (eklemeIzni) {
+                                per.add(sagdakiTas)
+                                continue
+                            } else continue
+                        }
+                    } else continue
+                }
+            }
+            if(per.size>2){
+                if(dizilecekIsteka.size<100){
+                    dizilecekIsteka.addAll(per)
+                    per.clear()
+                }
+            }else per.clear()
+        }
+    }
+    return dizilecekIsteka
 }
