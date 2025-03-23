@@ -438,7 +438,7 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
     var per = mutableStateListOf<Tas>()
     var dizilecekIsteka = mutableStateListOf<Tas>()
     var eklemeIzni: Boolean
-
+/*
     if (deneyselIsteka.eldekiTaslar.size == 22) {
         deneyselIsteka.eldekiTaslar.sortBy { it.sayi }
         Loop@ for ((indis, soldakiTas) in deneyselIsteka.eldekiTaslar.withIndex()) {
@@ -450,10 +450,14 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                     if (soldakiTas.sayi == sagdakiTas.sayi) {
                         //sayılar aynı, renkler farklı ise
                         if (soldakiTas.renk != sagdakiTas.renk) {
-                            if (per.size < 1) {
+                            if (per.size < 2) {
                                 per.add(soldakiTas)
                                 per.add(sagdakiTas)
                             } else {
+                                if (per[0].sayi != per[1].sayi) {
+                                    if (per.size > 2) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                                    else per.removeAt(0)
+                                }
                                 for ((i, renkAriyorum) in per.withIndex()) {
                                     if (i + 1 == per.size) {
                                         if (renkAriyorum.renk != sagdakiTas.renk) {
@@ -474,42 +478,83 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                                 }
                                 if (eklemeIzni) {
                                     per.add(sagdakiTas)
-                                    if (indis + 2==22)IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                                    if (indis + 2 == 22) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
                                 }
                             }
                             continue
                         } else continue
                     }
-                    else if (true) {
-                        if (per.size > 2) {
-                            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                            continue@Loop
-                        }
-                    }
-                    //sayılar ardışık ise
-                       else if (soldakiTas.sayi == (sagdakiTas.sayi - 1)) {
-                           //sayılar ardışık, renkler aynı ise
-                           if (soldakiTas.renk == sagdakiTas.renk) {
-                               if (per.size < 1) {
-                                   per.add(soldakiTas)
-                                   per.add(sagdakiTas)
-                                   continue
-                               }
-                               else{
-                                   per.add(sagdakiTas)
-                                   continue
-                               }
-                           }
-                       }
-                    else {
-                        if (per.size > 2) {
-                            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                            continue@Loop
-                        }
-                    }
 
+                    //sayılar ardışık ise
+                    else if (soldakiTas.sayi == (sagdakiTas.sayi - 1)) {
+                        //sayılar ardışık, renkler aynı ise
+                        if (soldakiTas.renk == sagdakiTas.renk) {
+                            if (per.size < 2) {
+                                per.add(soldakiTas)
+                                per.add(sagdakiTas)
+                                continue
+                            } else {
+                                if (per[0].sayi == per[1].sayi) {
+                                    if (per.size > 2) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                                    else per.removeAt(0)
+                                }
+                                per.add(sagdakiTas)
+                                continue
+                            }
+                        }
+                    } else {
+                        if (per.size > 2) {
+                            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                            continue@Loop
+                        }
+                    }
                 }
             } else continue
+        }
+        if (per.size > 2) {
+            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+        }
+    }*/
+    if(deneyselIsteka.eldekiTaslar.size==22){
+        deneyselIsteka.eldekiTaslar.sortBy { it.sayi }
+        for ((index,ilkTas) in deneyselIsteka.eldekiTaslar.withIndex()){
+            if (ilkTas.kullanilabilirMi){
+                //son elemanda değilse
+                if (index+1<deneyselIsteka.eldekiTaslar.size){
+                    var kontrolEdilecekTas = deneyselIsteka.eldekiTaslar[index+1]
+                    //erkek per
+                    if (ilkTas.sayi==kontrolEdilecekTas.sayi){
+                        if(ilkTas.renk!=kontrolEdilecekTas.renk){
+                            if (per.size<2){
+                                per.add(ilkTas)
+                                per.add(kontrolEdilecekTas)
+                                continue
+                            }
+                            if(per.size==4){
+                                IstekayaEkle(per,dizilecekIsteka,deneyselIsteka.eldekiTaslar)
+
+                            }
+                            else if (per.size==2&&per[0].sayi!=kontrolEdilecekTas.sayi){
+                                per.removeAt(0)
+                                per.add(kontrolEdilecekTas)
+                                continue
+                            }
+                            else{
+                                for(perdekiTas in per){
+                                    if (kontrolEdilecekTas.renk==perdekiTas.renk){
+                                        eklemeIzni=false
+                                        break
+                                    }
+                                    else{
+                                        eklemeIzni=true
+                                        continue
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }else continue
+            }else continue
         }
     }
     return dizilecekIsteka
@@ -519,10 +564,10 @@ fun IstekayaEkle(alinanPer: MutableList<Tas>, dizilecekIsteka: MutableList<Tas>,
     dizilecekIsteka.addAll(alinanPer.toList())
     for (x in alinanPer) {
         for (y in deneyselIsteka) {
-            if (x.sayi == y.sayi&&x.renk==y.renk) {
+            if (x.sayi == y.sayi && x.renk == y.renk) {
                 y.kullanilabilirMi = false
-                Log.d("aloa", x.renk + "-" + x.sayi + "/" + y.renk + "-" + y.sayi)
                 Log.d("aloa", alinanPer.size.toString())
+                Log.d("aloa", x.toString() + " " + y.renk + "-" + y.sayi)
                 break
             }
         }
