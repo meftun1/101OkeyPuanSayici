@@ -80,6 +80,8 @@ object PuanHesaplamaEkrani
 
 data class Tas(var renk: String, var sayi: Int, var resim: Int, var kullanilabilirMi: Boolean = true)
 
+data class Per(var per: MutableList<Tas>, var perTuru: Int)
+
 data class Isteka(var eldekiTaslar: MutableList<Tas>, var puan: Int)
 
 @Composable
@@ -435,128 +437,77 @@ fun TasGorunumuOlustur(uretilecekTas: Tas, modifier: Modifier) {
 //puan hesaplama algoritması başlıyor yippie
 fun EliDiz(alinanIsteka: Isteka): List<Tas> {
     var deneyselIsteka = alinanIsteka
-    var per = mutableStateListOf<Tas>()
     var dizilecekIsteka = mutableStateListOf<Tas>()
-    var eklemeIzni: Boolean
-/*
-    if (deneyselIsteka.eldekiTaslar.size == 22) {
+    var eklemeIzni = true
+    if (alinanIsteka.eldekiTaslar.size == 22) {
         deneyselIsteka.eldekiTaslar.sortBy { it.sayi }
-        Loop@ for ((indis, soldakiTas) in deneyselIsteka.eldekiTaslar.withIndex()) {
-            eklemeIzni = false
-            if (soldakiTas.kullanilabilirMi) {
-                if (indis + 1 < 22) {
-                    val sagdakiTas = deneyselIsteka.eldekiTaslar.get(indis + 1)
-                    //sayılar aynı ise
-                    if (soldakiTas.sayi == sagdakiTas.sayi) {
-                        //sayılar aynı, renkler farklı ise
-                        if (soldakiTas.renk != sagdakiTas.renk) {
-                            if (per.size < 2) {
-                                per.add(soldakiTas)
-                                per.add(sagdakiTas)
-                            } else {
-                                if (per[0].sayi != per[1].sayi) {
-                                    if (per.size > 2) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                                    else per.removeAt(0)
-                                }
-                                for ((i, renkAriyorum) in per.withIndex()) {
-                                    if (i + 1 == per.size) {
-                                        if (renkAriyorum.renk != sagdakiTas.renk) {
-                                            eklemeIzni = true
-                                        } else {
+        val percik = Per(mutableStateListOf(), 0)
+        for ((index, isaretciTas) in deneyselIsteka.eldekiTaslar.withIndex()) {
+            if (isaretciTas.kullanilabilirMi) {
+                if (index + 1 < 22) {
+                    var count = index + 1
+                    while (count < 22 && isaretciTas.sayi == deneyselIsteka.eldekiTaslar[count].sayi && (percik.perTuru == 0 || percik.perTuru == 1)) {
+                        if (percik.per.size == 4) {
+                            IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                            percik.perTuru = 0
+                        }
+                        if (deneyselIsteka.eldekiTaslar[count].kullanilabilirMi) {
+                            val incelenenTas = deneyselIsteka.eldekiTaslar[count]
+                            if (isaretciTas.renk != incelenenTas.renk) {
+                                if (percik.per.size < 2) {
+                                    percik.per.add(isaretciTas)
+                                    percik.per.add(incelenenTas)
+                                    percik.perTuru = 1
+                                } else {
+                                    for (deger in percik.per) {
+                                        if (deger.renk == incelenenTas.renk) {
                                             eklemeIzni = false
                                             break
                                         }
+                                    }
+                                    if (eklemeIzni) {
+                                        percik.per.add(incelenenTas)
+                                    } else eklemeIzni = true
+                                }
+                            }
+                        }
+                        count++
+                    }
+                    if (percik.per.size > 2) {
+                        IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                        continue
+                    } else percik.per.clear()
+                    percik.perTuru = 0
+                    try {
+                        while (count < 22 && (isaretciTas.sayi == deneyselIsteka.eldekiTaslar[count].sayi - 1 || percik.per.last().sayi == deneyselIsteka.eldekiTaslar[count].sayi - 1) && (percik.perTuru == 0 || percik.perTuru == 2)) {
+                            if (deneyselIsteka.eldekiTaslar[count].kullanilabilirMi) {
+                                val incelenenTas = deneyselIsteka.eldekiTaslar[count]
+                                if (isaretciTas.renk == deneyselIsteka.eldekiTaslar[count].renk) {
+                                    if (percik.per.size < 2) {
+                                        percik.per.add(isaretciTas)
+                                        percik.per.add(incelenenTas)
+                                        percik.perTuru = 2
                                     } else {
-                                        if (renkAriyorum.renk == sagdakiTas.renk) {
-                                            eklemeIzni = false
-                                            break
-                                        } else {
-                                            eklemeIzni = true
-                                            continue
-                                        }
+                                        percik.per.add(incelenenTas)
                                     }
                                 }
-                                if (eklemeIzni) {
-                                    per.add(sagdakiTas)
-                                    if (indis + 2 == 22) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                                }
                             }
+                            count++
+                        }
+                        if (percik.per.size > 2) {
+                            IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
                             continue
-                        } else continue
+                        } else percik.per.clear()
+                        percik.perTuru = 0
+                    }catch (_:Exception){
+
                     }
 
-                    //sayılar ardışık ise
-                    else if (soldakiTas.sayi == (sagdakiTas.sayi - 1)) {
-                        //sayılar ardışık, renkler aynı ise
-                        if (soldakiTas.renk == sagdakiTas.renk) {
-                            if (per.size < 2) {
-                                per.add(soldakiTas)
-                                per.add(sagdakiTas)
-                                continue
-                            } else {
-                                if (per[0].sayi == per[1].sayi) {
-                                    if (per.size > 2) IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                                    else per.removeAt(0)
-                                }
-                                per.add(sagdakiTas)
-                                continue
-                            }
-                        }
-                    } else {
-                        if (per.size > 2) {
-                            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                            continue@Loop
-                        }
-                    }
                 }
-            } else continue
-        }
-        if (per.size > 2) {
-            IstekayaEkle(per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-        }
-    }*/
-    if(deneyselIsteka.eldekiTaslar.size==22){
-        deneyselIsteka.eldekiTaslar.sortBy { it.sayi }
-        for ((index,ilkTas) in deneyselIsteka.eldekiTaslar.withIndex()){
-            if (ilkTas.kullanilabilirMi){
-                //son elemanda değilse
-                if (index+1<deneyselIsteka.eldekiTaslar.size){
-                    var kontrolEdilecekTas = deneyselIsteka.eldekiTaslar[index+1]
-                    //erkek per
-                    if (ilkTas.sayi==kontrolEdilecekTas.sayi){
-                        if(ilkTas.renk!=kontrolEdilecekTas.renk){
-                            if (per.size<2){
-                                per.add(ilkTas)
-                                per.add(kontrolEdilecekTas)
-                                continue
-                            }
-                            if(per.size==4){
-                                IstekayaEkle(per,dizilecekIsteka,deneyselIsteka.eldekiTaslar)
-
-                            }
-                            else if (per.size==2&&per[0].sayi!=kontrolEdilecekTas.sayi){
-                                per.removeAt(0)
-                                per.add(kontrolEdilecekTas)
-                                continue
-                            }
-                            else{
-                                for(perdekiTas in per){
-                                    if (kontrolEdilecekTas.renk==perdekiTas.renk){
-                                        eklemeIzni=false
-                                        break
-                                    }
-                                    else{
-                                        eklemeIzni=true
-                                        continue
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }else continue
-            }else continue
+            }
         }
     }
+
     return dizilecekIsteka
 }
 
@@ -573,4 +524,5 @@ fun IstekayaEkle(alinanPer: MutableList<Tas>, dizilecekIsteka: MutableList<Tas>,
         }
     }
     alinanPer.clear()
+
 }
