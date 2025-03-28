@@ -436,29 +436,29 @@ fun TasGorunumuOlustur(uretilecekTas: Tas, modifier: Modifier) {
 
 //puan hesaplama algoritması başlıyor yippie
 fun EliDiz(alinanIsteka: Isteka): List<Tas> {
-    var deneyselIsteka = alinanIsteka
-    var dizilecekIsteka = mutableStateListOf<Tas>()
-    var eklemeIzni = true
+    val dizilecekIsteka = mutableListOf<Tas>()
+    var eklemeIzni = false
     if (alinanIsteka.eldekiTaslar.size == 22) {
-        deneyselIsteka.eldekiTaslar.sortBy { it.sayi }
-        val percik = Per(mutableStateListOf(), 0)
-        for ((index, isaretciTas) in deneyselIsteka.eldekiTaslar.withIndex()) {
+        alinanIsteka.eldekiTaslar.sortBy { it.sayi }
+        val percik = Per(mutableListOf(), 0)
+        for ((index, isaretciTas) in alinanIsteka.eldekiTaslar.withIndex()) {
             if (isaretciTas.kullanilabilirMi) {
                 if (index + 1 < 22) {
                     var count = index + 1
-                    while (count < 22 && isaretciTas.sayi == deneyselIsteka.eldekiTaslar[count].sayi && (percik.perTuru == 0 || percik.perTuru == 1)) {
+                    while (count < 22 && isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi) {
                         if (percik.per.size == 4) {
-                            IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                            IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
                             percik.perTuru = 0
                         }
-                        if (deneyselIsteka.eldekiTaslar[count].kullanilabilirMi) {
-                            val incelenenTas = deneyselIsteka.eldekiTaslar[count]
+                        if (alinanIsteka.eldekiTaslar[count].kullanilabilirMi) {
+                            val incelenenTas = alinanIsteka.eldekiTaslar[count]
                             if (isaretciTas.renk != incelenenTas.renk) {
                                 if (percik.per.size < 2) {
                                     percik.per.add(isaretciTas)
                                     percik.per.add(incelenenTas)
                                     percik.perTuru = 1
                                 } else {
+                                    eklemeIzni = true
                                     for (deger in percik.per) {
                                         if (deger.renk == incelenenTas.renk) {
                                             eklemeIzni = false
@@ -467,44 +467,47 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                                     }
                                     if (eklemeIzni) {
                                         percik.per.add(incelenenTas)
-                                    } else eklemeIzni = true
+                                    }
                                 }
                             }
                         }
                         count++
                     }
                     if (percik.per.size > 2) {
-                        IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
+                        IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
                         continue
                     } else percik.per.clear()
                     percik.perTuru = 0
-                    try {
-                        while (count < 22 && (isaretciTas.sayi == deneyselIsteka.eldekiTaslar[count].sayi - 1 || percik.per.last().sayi == deneyselIsteka.eldekiTaslar[count].sayi - 1) && (percik.perTuru == 0 || percik.perTuru == 2)) {
-                            if (deneyselIsteka.eldekiTaslar[count].kullanilabilirMi) {
-                                val incelenenTas = deneyselIsteka.eldekiTaslar[count]
-                                if (isaretciTas.renk == deneyselIsteka.eldekiTaslar[count].renk) {
+                    count = index + 1
+
+                    if (isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi || isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi - 1) {
+                        while (count < 22) {
+                            if (alinanIsteka.eldekiTaslar[count].kullanilabilirMi) {
+                                val incelenenTas = alinanIsteka.eldekiTaslar[count]
+                                if (incelenenTas.renk == isaretciTas.renk) {
                                     if (percik.per.size < 2) {
-                                        percik.per.add(isaretciTas)
-                                        percik.per.add(incelenenTas)
-                                        percik.perTuru = 2
+                                        if (isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi - 1) {
+                                            percik.per.add(isaretciTas)
+                                            percik.per.add(incelenenTas)
+                                            percik.perTuru = 2
+                                        }
                                     } else {
-                                        percik.per.add(incelenenTas)
+                                        if (percik.per.last().sayi == alinanIsteka.eldekiTaslar[count].sayi - 1 && !percik.per.contains(incelenenTas)) {
+                                            percik.per.add(incelenenTas)
+                                        }
                                     }
                                 }
                             }
                             count++
                         }
-                        if (percik.per.size > 2) {
-                            IstekayaEkle(percik.per, dizilecekIsteka, deneyselIsteka.eldekiTaslar)
-                            continue
-                        } else percik.per.clear()
-                        percik.perTuru = 0
-                    }catch (_:Exception){
-
                     }
 
+                    if (percik.per.size > 2) {
+                        IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
+                    } else percik.per.clear()
+                    percik.perTuru = 0
                 }
-            }
+            } else continue
         }
     }
 
@@ -513,6 +516,7 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
 
 fun IstekayaEkle(alinanPer: MutableList<Tas>, dizilecekIsteka: MutableList<Tas>, deneyselIsteka: MutableList<Tas>) {
     dizilecekIsteka.addAll(alinanPer.toList())
+    Log.d("aloa", alinanPer.toString())
     for (x in alinanPer) {
         for (y in deneyselIsteka) {
             if (x.sayi == y.sayi && x.renk == y.renk) {
