@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -157,7 +158,7 @@ fun NavYoneticisi() {
                                     val olusanTas by remember { mutableStateOf(Tas(renk, tasNumarasi, 0)) }
                                     TasGorunumuOlustur(olusanTas, modifier = Modifier.clickable {
                                         if (isteka.eldekiTaslar.size < 22) {
-                                            isteka.eldekiTaslar.add(olusanTas)
+                                            isteka.eldekiTaslar.add(olusanTas.copy())
                                             Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.size.toString() + ". taş seçildi")
                                             Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().sayi.toString())
                                             Log.println(Log.INFO, "ismet", isteka.eldekiTaslar.last().renk)
@@ -204,6 +205,9 @@ fun NavYoneticisi() {
                     Button(
                         onClick = {
                             isteka.eldekiTaslar.clear()
+                            for (x in diziliIsteka) {
+                                x.kullanilabilirMi = true
+                            }
                             diziliIsteka.clear()
                         },
                         modifier = Modifier
@@ -442,13 +446,14 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
         alinanIsteka.eldekiTaslar.sortBy { it.sayi }
         val percik = Per(mutableListOf(), 0)
         for ((index, isaretciTas) in alinanIsteka.eldekiTaslar.withIndex()) {
+            Log.d("zimba", "$index ilk tas: ${alinanIsteka.eldekiTaslar[1]}")
+            Log.d("zimba", "$index ikinci tas: ${alinanIsteka.eldekiTaslar[2]}")
             if (isaretciTas.kullanilabilirMi) {
                 if (index + 1 < 22) {
                     var count = index + 1
                     while (count < 22 && isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi) {
                         if (percik.per.size == 4) {
                             IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
-                            percik.perTuru = 0
                         }
                         if (alinanIsteka.eldekiTaslar[count].kullanilabilirMi) {
                             val incelenenTas = alinanIsteka.eldekiTaslar[count]
@@ -456,7 +461,6 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                                 if (percik.per.size < 2) {
                                     percik.per.add(isaretciTas)
                                     percik.per.add(incelenenTas)
-                                    percik.perTuru = 1
                                 } else {
                                     eklemeIzni = true
                                     for (deger in percik.per) {
@@ -477,19 +481,17 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                         IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
                         continue
                     } else percik.per.clear()
-                    percik.perTuru = 0
                     count = index + 1
 
                     if (isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi || isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi - 1) {
                         while (count < 22) {
-                            if (alinanIsteka.eldekiTaslar[count].kullanilabilirMi) {
-                                val incelenenTas = alinanIsteka.eldekiTaslar[count]
+                            val incelenenTas = alinanIsteka.eldekiTaslar[count]
+                            if (incelenenTas.kullanilabilirMi) {
                                 if (incelenenTas.renk == isaretciTas.renk) {
                                     if (percik.per.size < 2) {
                                         if (isaretciTas.sayi == alinanIsteka.eldekiTaslar[count].sayi - 1) {
                                             percik.per.add(isaretciTas)
                                             percik.per.add(incelenenTas)
-                                            percik.perTuru = 2
                                         }
                                     } else {
                                         if (percik.per.last().sayi == alinanIsteka.eldekiTaslar[count].sayi - 1 && !percik.per.contains(incelenenTas)) {
@@ -498,6 +500,7 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                                     }
                                 }
                             }
+
                             count++
                         }
                     }
@@ -505,28 +508,37 @@ fun EliDiz(alinanIsteka: Isteka): List<Tas> {
                     if (percik.per.size > 2) {
                         IstekayaEkle(percik.per, dizilecekIsteka, alinanIsteka.eldekiTaslar)
                     } else percik.per.clear()
-                    percik.perTuru = 0
                 }
             } else continue
         }
     }
-
     return dizilecekIsteka
 }
 
 fun IstekayaEkle(alinanPer: MutableList<Tas>, dizilecekIsteka: MutableList<Tas>, deneyselIsteka: MutableList<Tas>) {
     dizilecekIsteka.addAll(alinanPer.toList())
-    Log.d("aloa", alinanPer.toString())
+    var falsesay=0
     for (x in alinanPer) {
-        for (y in deneyselIsteka) {
-            if (x.sayi == y.sayi && x.renk == y.renk) {
-                y.kullanilabilirMi = false
-                Log.d("aloa", alinanPer.size.toString())
-                Log.d("aloa", x.toString() + " " + y.renk + "-" + y.sayi)
-                break
-            }
-        }
-    }
-    alinanPer.clear()
+        deneyselIsteka.firstOrNull { it.sayi == x.sayi && it.renk == x.renk && it.kullanilabilirMi }?.kullanilabilirMi=false
 
-}
+        val uygun =deneyselIsteka.indexOf( deneyselIsteka.firstOrNull { it.sayi == x.sayi && it.renk == x.renk && it.kullanilabilirMi })
+        Log.d("indeksim","$uygun")
+        falsesay++
+
+    }
+
+    Log.d("indeksim","$falsesay kadar değişti")
+    var falseolanlar=0
+    for (i in deneyselIsteka){
+        if(!i.kullanilabilirMi) falseolanlar++
+    }
+    Log.d("indeksim","$deneyselIsteka")
+    Log.d("indeksim","$falseolanlar")
+
+    Log.d("bambam", "1 hash: ${deneyselIsteka[1].hashCode()}")
+    Log.d("bambam", "2 hash: ${deneyselIsteka[2].hashCode()}")
+    Log.d("bambam", "2 hash: ${deneyselIsteka[3].hashCode()}")
+
+
+    alinanPer.clear()
+}                                                                                                                                                                                  
